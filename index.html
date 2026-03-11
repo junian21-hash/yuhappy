@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>유해피 아동상담</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Noto+Serif+KR:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --orange: #E87722; --orange-light: #F5A45D;
+    --orange-pale: #FFF3E8; --olive: #6B7A3F;
+    --cream: #FDF8F2; --brown: #3D2B1F;
+    --gray: #6B6459; --gray-light: #F0EDE8;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Noto Sans KR',sans-serif; background:var(--cream); color:var(--brown); }
+
+  .hero { background:var(--brown); padding:48px 24px 44px; text-align:center; position:relative; overflow:hidden; }
+  .hero::before { content:''; position:absolute; top:-60px; right:-60px; width:220px; height:220px; border-radius:50%; background:var(--orange); opacity:0.12; }
+  .hero::after { content:''; position:absolute; bottom:-40px; left:-40px; width:150px; height:150px; border-radius:50%; background:var(--orange-light); opacity:0.1; }
+  .hero-tag { display:inline-block; background:var(--orange); color:white; font-size:11px; font-weight:700; letter-spacing:2px; padding:5px 14px; border-radius:20px; margin-bottom:16px; }
+  .hero h1 { font-family:'Noto Serif KR',serif; font-size:clamp(20px,5vw,32px); color:white; line-height:1.4; margin-bottom:8px; }
+  .hero h1 span { color:var(--orange-light); }
+  .hero p { color:rgba(255,255,255,0.6); font-size:13px; line-height:1.7; margin-bottom:24px; }
+
+  .input-wrap { max-width:540px; margin:0 auto; position:relative; z-index:2; }
+  .input-box { background:white; border-radius:20px; padding:20px; box-shadow:0 8px 32px rgba(0,0,0,0.2); }
+  .input-label { font-size:12px; font-weight:700; color:var(--orange); margin-bottom:10px; display:flex; align-items:center; gap:6px; }
+  .input-label::before { content:'✦'; font-size:10px; }
+  .char-count { margin-left:auto; font-size:11px; color:#B0A89E; font-weight:400; }
+  .char-count.over { color:#e74c3c; }
+  textarea { width:100%; border:1.5px solid var(--gray-light); border-radius:12px; padding:12px 14px; font-family:'Noto Sans KR',sans-serif; font-size:14px; color:var(--brown); resize:none; height:90px; outline:none; transition:border-color 0.2s; background:var(--cream); }
+  textarea:focus { border-color:var(--orange); }
+  textarea::placeholder { color:#B0A89E; }
+  .chips { display:flex; gap:6px; flex-wrap:wrap; margin:10px 0; }
+  .chip { background:var(--orange-pale); color:var(--orange); border:1px solid rgba(232,119,34,0.2); border-radius:20px; padding:4px 12px; font-size:11px; cursor:pointer; font-family:'Noto Sans KR',sans-serif; transition:all 0.15s; }
+  .chip:hover { background:var(--orange); color:white; }
+  .submit-btn { width:100%; background:var(--orange); color:white; border:none; border-radius:12px; padding:13px; font-size:14px; font-weight:700; font-family:'Noto Sans KR',sans-serif; cursor:pointer; transition:background 0.2s; }
+  .submit-btn:hover { background:#C9611A; }
+  .submit-btn:disabled { background:#ccc; cursor:not-allowed; }
+
+  .result-wrap { max-width:600px; margin:24px auto 0; padding:0 20px; display:none; }
+  .result-wrap.visible { display:block; }
+  .result-box { background:white; border-radius:20px; border:2px solid var(--orange); overflow:hidden; box-shadow:0 4px 20px rgba(232,119,34,0.12); animation:fadeIn 0.3s ease; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+  .result-header { background:var(--orange); padding:14px 20px; display:flex; align-items:center; gap:10px; }
+  .result-header h3 { color:white; font-size:14px; font-weight:700; }
+  .result-body { padding:20px 20px 8px; }
+  .empathy-msg { background:var(--orange-pale); border-radius:12px; padding:14px 16px; margin-bottom:16px; font-size:14px; line-height:1.7; color:var(--brown); border-left:3px solid var(--orange); }
+  .result-rows { display:flex; flex-direction:column; gap:10px; margin-bottom:14px; }
+  .result-row { background:var(--cream); border-radius:12px; padding:14px 16px; }
+  .result-row-label { font-size:11px; font-weight:700; color:var(--gray); letter-spacing:1px; margin-bottom:8px; }
+  .result-tags { display:flex; flex-wrap:wrap; gap:6px; }
+  .rtag { padding:5px 12px; border-radius:20px; font-size:12px; font-weight:600; }
+  .rtag-type { background:var(--orange-pale); color:var(--orange); border:1px solid rgba(232,119,34,0.25); }
+  .rtag-test { background:#EEF3E8; color:var(--olive); border:1px solid rgba(107,122,63,0.25); }
+  .rtag-therapy { background:#EAF0F8; color:#3D6A9E; border:1px solid rgba(61,106,158,0.25); }
+
+  .overlap-box { background:#FFF8F0; border:1.5px solid rgba(232,119,34,0.3); border-radius:12px; padding:14px 16px; margin:0 20px 16px; }
+  .overlap-box-title { font-size:12px; font-weight:700; color:var(--orange); margin-bottom:8px; }
+  .overlap-tags { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px; }
+  .overlap-tag { background:white; color:var(--orange); border:1.5px solid var(--orange); border-radius:20px; padding:4px 12px; font-size:12px; font-weight:600; }
+  .overlap-desc { font-size:12px; color:var(--gray); line-height:1.7; }
+
+  .result-tip { border-top:1px dashed var(--gray-light); padding:14px 20px 16px; font-size:13px; color:var(--gray); line-height:1.8; }
+  .result-tip::before { content:'💬 '; }
+  .consult-btn-wrap { padding:0 20px 20px; }
+  .consult-btn { display:block; width:100%; background:var(--brown); color:white; border:none; border-radius:12px; padding:13px; font-size:14px; font-weight:700; font-family:'Noto Sans KR',sans-serif; cursor:pointer; text-align:center; text-decoration:none; transition:background 0.2s; }
+  .consult-btn:hover { background:#5A3F30; }
+
+  .loading-wrap { padding:28px; text-align:center; }
+  .dots span { display:inline-block; width:8px; height:8px; background:var(--orange); border-radius:50%; margin:0 3px; animation:bounce 1.2s infinite; }
+  .dots span:nth-child(2) { animation-delay:0.2s; }
+  .dots span:nth-child(3) { animation-delay:0.4s; }
+  @keyframes bounce { 0%,80%,100%{transform:translateY(0);opacity:0.4} 40%{transform:translateY(-8px);opacity:1} }
+  .loading-txt { font-size:13px; color:var(--gray); margin-top:10px; }
+
+  .divider { max-width:600px; margin:28px auto 0; padding:0 20px; display:none; align-items:center; gap:12px; color:var(--gray); font-size:12px; }
+  .divider.visible { display:flex; }
+  .divider::before,.divider::after { content:''; flex:1; height:1px; background:var(--gray-light); }
+
+  .list-wrap { max-width:600px; margin:20px auto 0; padding:0 20px 60px; }
+  .filter-bar { display:flex; gap:7px; flex-wrap:wrap; margin-bottom:20px; }
+  .fbtn { padding:6px 14px; border-radius:20px; border:1.5px solid var(--gray-light); background:white; color:var(--gray); font-size:12px; font-weight:500; cursor:pointer; font-family:'Noto Sans KR',sans-serif; transition:all 0.2s; }
+  .fbtn.active,.fbtn:hover { background:var(--orange); border-color:var(--orange); color:white; }
+  .sec-label { font-size:11px; font-weight:700; letter-spacing:2px; color:var(--orange); margin:28px 0 14px; display:flex; align-items:center; gap:10px; }
+  .sec-label::after { content:''; flex:1; height:1px; background:var(--orange); opacity:0.2; }
+  .card { background:white; border-radius:14px; padding:18px 20px; margin-bottom:10px; border:1.5px solid transparent; transition:all 0.25s; cursor:pointer; position:relative; overflow:hidden; }
+  .card::before { content:''; position:absolute; left:0; top:0; bottom:0; width:4px; background:var(--orange); border-radius:4px 0 0 4px; opacity:0; transition:opacity 0.2s; }
+  .card:hover { border-color:var(--orange-light); box-shadow:0 4px 16px rgba(232,119,34,0.1); transform:translateY(-1px); }
+  .card:hover::before { opacity:1; }
+  .card.highlighted { border-color:var(--orange) !important; box-shadow:0 0 0 3px rgba(232,119,34,0.15) !important; }
+  .card.highlighted::before { opacity:1 !important; }
+  .card.related { border-color:#3D6A9E !important; box-shadow:0 0 0 3px rgba(61,106,158,0.12) !important; }
+  .card.related::before { background:#3D6A9E !important; opacity:1 !important; }
+  .card-q { font-size:14px; font-weight:700; color:var(--brown); margin-bottom:10px; line-height:1.5; }
+  .card-q::before { content:'Q. '; color:var(--orange); }
+  .ai-badge { display:inline-block; background:var(--orange); color:white; font-size:10px; font-weight:700; padding:2px 8px; border-radius:10px; margin-left:8px; vertical-align:middle; }
+  .related-badge { display:inline-block; background:#3D6A9E; color:white; font-size:10px; font-weight:700; padding:2px 8px; border-radius:10px; margin-left:8px; vertical-align:middle; }
+  .tags { display:flex; flex-wrap:wrap; gap:6px; }
+  .tag { padding:3px 10px; border-radius:12px; font-size:11px; font-weight:500; display:inline-flex; align-items:center; gap:4px; }
+  .t1 { background:var(--orange-pale); color:var(--orange); border:1px solid rgba(232,119,34,0.2); }
+  .t2 { background:#EEF3E8; color:var(--olive); border:1px solid rgba(107,122,63,0.2); }
+  .t3 { background:#EAF0F8; color:#3D6A9E; border:1px solid rgba(61,106,158,0.2); }
+  .dot { width:5px; height:5px; border-radius:50%; display:inline-block; }
+  .t1 .dot{background:var(--orange)} .t2 .dot{background:var(--olive)} .t3 .dot{background:#3D6A9E}
+  .detail { display:none; margin-top:12px; padding-top:12px; border-top:1px dashed var(--gray-light); }
+  .card.open .detail { display:block; }
+  .detail p { font-size:13px; color:var(--gray); line-height:1.8; }
+  .legend { background:white; border-radius:12px; padding:14px 18px; margin-bottom:20px; display:flex; gap:18px; flex-wrap:wrap; border:1px solid var(--gray-light); }
+  .leg { display:flex; align-items:center; gap:7px; font-size:12px; color:var(--gray); }
+  .leg-dot { width:10px; height:10px; border-radius:3px; }
+  .cta { background:var(--brown); border-radius:18px; padding:28px 24px; text-align:center; margin-top:32px; }
+  .cta h3 { color:white; font-size:16px; margin-bottom:8px; font-family:'Noto Serif KR',serif; }
+  .cta p { color:rgba(255,255,255,0.6); font-size:13px; margin-bottom:16px; }
+  .cta a { display:inline-block; background:var(--orange); color:white; padding:11px 28px; border-radius:30px; font-weight:700; font-size:14px; text-decoration:none; }
+  .hidden { display:none !important; }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-tag">유해피 심리상담센터</div>
+  <h1>아이에게 <span>어떤 고민</span>이<br>있으신가요?</h1>
+  <p>고민을 입력하면 맞는 상담 유형을 찾아드려요<br>최대 100자까지 입력 가능합니다</p>
+  <div class="input-wrap">
+    <div class="input-box">
+      <div class="input-label">고민을 입력해주세요 <span class="char-count" id="charCount">0 / 100</span></div>
+      <textarea id="worryInput" maxlength="100" placeholder="예) 애가 친구들만 보면 깨물고 하지말라고 해도 자꾸 해요..."></textarea>
+      <div class="chips">
+        <span class="chip" onclick="setEx('집중을 못하고 너무 산만해요')">집중 못해요</span>
+        <span class="chip" onclick="setEx('엄마랑 떨어지면 심하게 울어요')">분리불안 같아요</span>
+        <span class="chip" onclick="setEx('손을 계속 씻고 반복행동을 해요')">반복행동 해요</span>
+        <span class="chip" onclick="setEx('학교 가기 싫다고 매일 배가 아프대요')">등교 거부해요</span>
+        <span class="chip" onclick="setEx('친구들만 보면 깨물고 하지말라고 해도 자꾸 해요')">친구를 깨물어요</span>
+        <span class="chip" onclick="setEx('무기력하고 말수가 줄었어요')">무기력해요</span>
+      </div>
+      <button class="submit-btn" id="submitBtn" onclick="analyze()">✦ 상담 유형 찾아보기</button>
+    </div>
+  </div>
+</div>
+
+<div class="result-wrap" id="resultWrap">
+  <div class="result-box">
+    <div class="result-header">
+      <div style="width:28px;height:28px;background:rgba(255,255,255,0.2);border-radius:50%;display:flex;align-items:center;justify-content:center;">✦</div>
+      <h3>상담 추천 결과</h3>
+    </div>
+    <div id="resultInner"></div>
+  </div>
+</div>
+
+<div class="divider" id="divider">전체 상담 목록</div>
+
+<div class="list-wrap">
+  <div class="filter-bar">
+    <button class="fbtn active" onclick="filter('all',event)">전체</button>
+    <button class="fbtn" onclick="filter('adhd',event)">ADHD</button>
+    <button class="fbtn" onclick="filter('dep',event)">소아우울증</button>
+    <button class="fbtn" onclick="filter('dev',event)">발달장애</button>
+    <button class="fbtn" onclick="filter('anx',event)">분리불안</button>
+    <button class="fbtn" onclick="filter('ocd',event)">강박증</button>
+    <button class="fbtn" onclick="filter('sch',event)">학교부적응</button>
+    <button class="fbtn" onclick="filter('basic',event)">기본상담</button>
+  </div>
+  <div class="legend">
+    <div class="leg"><div class="leg-dot" style="background:#E87722"></div>상담 유형</div>
+    <div class="leg"><div class="leg-dot" style="background:#6B7A3F"></div>추천 검사</div>
+    <div class="leg"><div class="leg-dot" style="background:#3D6A9E"></div>추천 치료</div>
+  </div>
+
+  <div class="sec-label">기본 상담 · 양육</div>
+  <div class="card" id="card-basic-1" data-cat="basic" onclick="toggleCard(this)"><div class="card-q">내 아이에게 맞는 육아 방법을 모르겠어요</div><div class="tags"><span class="tag t1"><span class="dot"></span>영유아/아동 기본상담</span><span class="tag t2"><span class="dot"></span>양육태도검사</span><span class="tag t2"><span class="dot"></span>TCI</span></div><div class="detail"><p>아이의 기질과 부모의 양육 방식이 잘 맞는지 확인하고, 나와 우리 아이에게 맞는 일관된 육아 방법을 찾아드립니다.</p></div></div>
+  <div class="card" id="card-basic-2" data-cat="basic" onclick="toggleCard(this)"><div class="card-q">우리 아이 지능이 또래 수준인지 궁금해요</div><div class="tags"><span class="tag t1"><span class="dot"></span>영유아/아동 기본상담</span><span class="tag t2"><span class="dot"></span>유아웩슬러지능검사(WPPSI)</span></div><div class="detail"><p>2~7세 아동의 언어이해, 지각추론, 시공간 지능을 종합적으로 평가합니다.</p></div></div>
+  <div class="card" id="card-basic-3" data-cat="basic" onclick="toggleCard(this)"><div class="card-q">말이 늦고 언어 표현이 부족해요</div><div class="tags"><span class="tag t1"><span class="dot"></span>영유아/아동 기본상담</span><span class="tag t2"><span class="dot"></span>WPPSI</span><span class="tag t3"><span class="dot"></span>언어치료</span></div><div class="detail"><p>언어 발달이 또래보다 늦거나 표현이 부족한 경우 지능 및 발달 평가 후 언어치료를 진행합니다.</p></div></div>
+
+  <div class="sec-label">ADHD · 주의력</div>
+  <div class="card" id="card-adhd-1" data-cat="adhd" onclick="toggleCard(this)"><div class="card-q">집중을 못하고 산만하며 실수가 잦아요</div><div class="tags"><span class="tag t1"><span class="dot"></span>ADHD 상담</span><span class="tag t2"><span class="dot"></span>WPPSI</span><span class="tag t2"><span class="dot"></span>TCI</span><span class="tag t3"><span class="dot"></span>학습치료</span></div><div class="detail"><p>주의산만 증상으로 학업이나 일상에서 부주의한 실수가 많은 경우 ADHD 평가 및 학습치료를 권장합니다.</p></div></div>
+  <div class="card" id="card-adhd-2" data-cat="adhd" onclick="toggleCard(this)"><div class="card-q">가만히 못 있고 충동적으로 행동해요</div><div class="tags"><span class="tag t1"><span class="dot"></span>ADHD 상담</span><span class="tag t2"><span class="dot"></span>TCI</span><span class="tag t3"><span class="dot"></span>놀이치료</span><span class="tag t3"><span class="dot"></span>미술치료</span></div><div class="detail"><p>과잉행동·충동성 증상이 있는 경우, 아이의 기질을 이해하고 양육 코칭과 함께 놀이치료로 접근합니다.</p></div></div>
+  <div class="card" id="card-adhd-3" data-cat="adhd" onclick="toggleCard(this)"><div class="card-q">ADHD 아이 양육을 어떻게 해야 할지 모르겠어요</div><div class="tags"><span class="tag t1"><span class="dot"></span>ADHD 부모상담</span><span class="tag t2"><span class="dot"></span>양육태도검사</span><span class="tag t3"><span class="dot"></span>양육코칭</span></div><div class="detail"><p>ADHD 아동 부모님을 위한 효과적인 의사소통, 보상과 처벌, 감정 표현 교육 등 맞춤 양육 코칭을 제공합니다.</p></div></div>
+
+  <div class="sec-label">소아우울증 · 정서</div>
+  <div class="card" id="card-dep-1" data-cat="dep" onclick="toggleCard(this)"><div class="card-q">아이가 무기력하고 말수가 줄었어요</div><div class="tags"><span class="tag t1"><span class="dot"></span>소아우울증 상담</span><span class="tag t2"><span class="dot"></span>TCI</span><span class="tag t3"><span class="dot"></span>놀이치료</span><span class="tag t3"><span class="dot"></span>미술치료</span></div><div class="detail"><p>말투가 느려지고 자신감이 없어 보이는 경우 소아우울증 증상일 수 있습니다. 조기 치료가 중요합니다.</p></div></div>
+  <div class="card" id="card-dep-2" data-cat="dep" onclick="toggleCard(this)"><div class="card-q">짜증이 늘고 난폭한 말과 행동을 해요</div><div class="tags"><span class="tag t1"><span class="dot"></span>소아우울증 상담</span><span class="tag t2"><span class="dot"></span>TCI</span><span class="tag t3"><span class="dot"></span>미술치료</span><span class="tag t3"><span class="dot"></span>연극치료</span></div><div class="detail"><p>우울한 아이는 슬픔보다 짜증과 분노로 표현되는 경우가 많습니다.</p></div></div>
+  <div class="card" id="card-dep-3" data-cat="dep" onclick="toggleCard(this)"><div class="card-q">"죽고 싶다"는 말을 해요</div><div class="tags"><span class="tag t1"><span class="dot"></span>소아우울증 상담</span><span class="tag t2"><span class="dot"></span>TCI</span><span class="tag t3"><span class="dot"></span>심리치료</span><span class="tag t3"><span class="dot"></span>놀이치료</span></div><div class="detail"><p>부정적 표현이 반복된다면 즉시 전문가 상담이 필요합니다.</p></div></div>
+  <div class="card" id="card-dep-4" data-cat="dep" onclick="toggleCard(this)"><div class="card-q">복통·두통 등 신체 증상을 자주 호소해요</div><div class="tags"><span class="tag t1"><span class="dot"></span>소아우울증 / 분리불안</span><span class="tag t2"><span class="dot"></span>TCI</span><span class="tag t3"><span class="dot"></span>놀이치료</span></div><div class="detail"><p>신체화 증상은 심리적 스트레스가 몸으로 나타나는 것입니다.</p></div></div>
+
+  <div class="sec-label">발달장애 · 사회성</div>
+  <div class="card" id="card-dev-1" data-cat="dev" onclick="toggleCard(this)"><div class="card-q">또래와 어울리지 못하고 공감 능력이 부족해요</div><div class="tags"><span class="tag t1"><span class="dot"></span>발달장애 상담</span><span class="tag t2"><span class="dot"></span>WPPSI</span><span class="tag t2"><span class="dot"></span>TCI</span><span class="tag t3"><span class="dot"></span>사회성그룹치료</span></div><div class="detail"><p>발달 전반을 평가하고 사회성 치료를 시작합니다.</p></div></div>
+  <div class="card" id="card-dev-2" data-cat="dev" onclick="toggleCard(this)"><div class="card-q">감정 조절이 안 되고 쉽게 흥분해요</div><div class="tags"><span class="tag t1"><span class="dot"></span>발달장애 / ADHD</span><span class="tag t2"><span class="dot"></span>TCI</span><span class="tag t3"><span class="dot"></span>놀이치료</span><span class="tag t3"><span class="dot"></span>미술치료</span></div><div class="detail"><p>기질 검사를 통해 원인을 파악하고 정서 치료를 진행합니다.</p></div></div>
+
+  <div class="sec-label">분리불안 · 등교거부</div>
+  <div class="card" id="card-anx-1" data-cat="anx" onclick="toggleCard(this)"><div class="card-q">엄마와 떨어지면 심하게 울고 불안해해요</div><div class="tags"><span class="tag t1"><span class="dot"></span>분리불안 상담</span><span class="tag t2"><span class="dot"></span>TCI</span><span class="tag t2"><span class="dot"></span>양육태도검사</span><span class="tag t3"><span class="dot"></span>놀이치료</span><span class="tag t3"><span class="dot"></span>가족치료</span></div><div class="detail"><p>분리 시 신체 증상을 보이거나 폭력적 성향을 보이는 경우 조기 치료가 필요합니다.</p></div></div>
+  <div class="card" id="card-anx-2" data-cat="anx sch" onclick="toggleCard(this)"><div class="card-q">유치원/학교 가기를 극도로 싫어해요</div><div class="tags"><span class="tag t1"><span class="dot"></span>분리불안 / 학교부적응</span><span class="tag t2"><span class="dot"></span>TCI</span><span class="tag t3"><span class="dot"></span>놀이치료</span><span class="tag t3"><span class="dot"></span>행동치료</span></div><div class="detail"><p>등교 거부의 원인을 먼저 파악하는 것이 중요합니다.</p></div></div>
+
+  <div class="sec-label">소아강박증</div>
+  <div class="card" id="card-ocd-1" data-cat="ocd" onclick="toggleCard(this)"><div class="card-q">손 씻기, 목욕 등을 지나치게 반복해요</div><div class="tags"><span class="tag t1"><span class="dot"></span>소아강박증 상담</span><span class="tag t2"><span class="dot"></span>TCI</span><span class="tag t3"><span class="dot"></span>인지치료</span><span class="tag t3"><span class="dot"></span>놀이치료</span></div><div class="detail"><p>근본적인 불안 원인을 찾아 인지·행동 치료로 접근합니다.</p></div></div>
+  <div class="card" id="card-ocd-2" data-cat="ocd" onclick="toggleCard(this)"><div class="card-q">숫자·정리·완벽주의에 지나치게 집착해요</div><div class="tags"><span class="tag t1"><span class="dot"></span>소아강박증 상담</span><span class="tag t2"><span class="dot"></span>TCI</span><span class="tag t3"><span class="dot"></span>인지치료</span></div><div class="detail"><p>강박증 평가 후 인지치료를 시작합니다.</p></div></div>
+
+  <div class="sec-label">학교부적응 · 또래관계</div>
+  <div class="card" id="card-sch-1" data-cat="sch" onclick="toggleCard(this)"><div class="card-q">학교 등교를 거부하고 이유 없이 전학을 요구해요</div><div class="tags"><span class="tag t1"><span class="dot"></span>학교부적응 상담</span><span class="tag t2"><span class="dot"></span>WPPSI</span><span class="tag t2"><span class="dot"></span>TCI</span><span class="tag t3"><span class="dot"></span>사회성그룹치료</span></div><div class="detail"><p>등교 거부의 원인을 정확히 파악하고 맞춤 치료를 진행합니다.</p></div></div>
+  <div class="card" id="card-sch-2" data-cat="sch" onclick="toggleCard(this)"><div class="card-q">친구 전화를 숨겨 받고 학교 얘기를 안 해요</div><div class="tags"><span class="tag t1"><span class="dot"></span>학교부적응 상담</span><span class="tag t2"><span class="dot"></span>TCI</span><span class="tag t3"><span class="dot"></span>사회성그룹치료</span><span class="tag t3"><span class="dot"></span>놀이치료</span></div><div class="detail"><p>아이의 심리 상태를 먼저 안정시키고 사회성 향상 치료를 진행합니다.</p></div></div>
+  <div class="card" id="card-sch-3" data-cat="sch" onclick="toggleCard(this)"><div class="card-q">새학기마다 복통·두통을 호소하고 잠을 못 자요</div><div class="tags"><span class="tag t1"><span class="dot"></span>학교부적응 / 분리불안</span><span class="tag t2"><span class="dot"></span>TCI</span><span class="tag t3"><span class="dot"></span>놀이치료</span><span class="tag t3"><span class="dot"></span>행동치료</span></div><div class="detail"><p>새학기 증후군은 환경 변화에 대한 불안이 신체 증상으로 나타나는 것입니다.</p></div></div>
+
+  <div class="cta">
+    <h3>어떤 상담이 맞는지 아직 모르겠다면?</h3>
+    <p>전문 상담사가 직접 도와드립니다</p>
+    <a href="#">전화 상담 문의하기</a>
+  </div>
+</div>
+
+<script>
+const textarea = document.getElementById('worryInput');
+const charCount = document.getElementById('charCount');
+textarea.addEventListener('input', () => {
+  const len = textarea.value.length;
+  charCount.textContent = len + ' / 100';
+  charCount.className = 'char-count' + (len >= 100 ? ' over' : '');
+});
+function setEx(t) { textarea.value = t; charCount.textContent = t.length + ' / 100'; textarea.focus(); }
+function toggleCard(c) { c.classList.toggle('open'); }
+function filter(cat, e) {
+  document.querySelectorAll('.fbtn').forEach(b => b.classList.remove('active'));
+  e.target.classList.add('active');
+  document.querySelectorAll('.card').forEach(c => {
+    if (cat === 'all' || (c.dataset.cat||'').includes(cat)) c.classList.remove('hidden');
+    else c.classList.add('hidden');
+  });
+}
+function clearHighlights() {
+  document.querySelectorAll('.card').forEach(c => {
+    c.classList.remove('highlighted','related','open');
+    c.querySelectorAll('.ai-badge,.related-badge').forEach(b => b.remove());
+  });
+}
+function renderResult(json) {
+  const makeRtags = (items, cls) => (items||[]).map(i => `<span class="rtag ${cls}">${i}</span>`).join('');
+  let overlapHtml = '';
+  if (json.overlap && json.overlap.length > 0) {
+    const tags = json.overlap.map(i => `<span class="overlap-tag">${i}</span>`).join('');
+    overlapHtml = `
+      <div class="overlap-box">
+        <div class="overlap-box-title">📌 추가 관련 상담</div>
+        <div class="overlap-tags">${tags}</div>
+        <div class="overlap-desc">아래 상담 유형과 증상이 겹칠 수 있습니다. 정확한 진단은 전문 상담사와의 초기 상담을 통해 확인하시길 권장드립니다.</div>
+      </div>`;
+  }
+  return `
+    <div class="result-body">
+      <div class="empathy-msg">${json.empathy||''}</div>
+      <div class="result-rows">
+        <div class="result-row"><div class="result-row-label">🔍 예상되는 상담</div><div class="result-tags">${makeRtags(json.counsel,'rtag-type')}</div></div>
+        <div class="result-row"><div class="result-row-label">📋 추천 검사</div><div class="result-tags">${makeRtags(json.tests,'rtag-test')}</div></div>
+        <div class="result-row"><div class="result-row-label">💚 추천 치료</div><div class="result-tags">${makeRtags(json.therapies,'rtag-therapy')}</div></div>
+      </div>
+    </div>
+    ${overlapHtml}
+    <div class="result-tip">${json.tip||''}</div>
+    <div class="consult-btn-wrap"><a class="consult-btn" href="#">📞 전문 상담사와 정확하게 확인하기</a></div>`;
+}
+async function analyze() {
+  const input = textarea.value.trim();
+  if (!input) { alert('고민 내용을 입력해주세요.'); return; }
+  const btn = document.getElementById('submitBtn');
+  const wrap = document.getElementById('resultWrap');
+  const inner = document.getElementById('resultInner');
+  const divider = document.getElementById('divider');
+  btn.disabled = true; btn.textContent = '분석 중...';
+  clearHighlights();
+  wrap.classList.add('visible');
+  divider.classList.add('visible');
+  inner.innerHTML = `<div class="loading-wrap"><div class="dots"><span></span><span></span><span></span></div><div class="loading-txt">고민을 분석하고 있어요...</div></div>`;
+  wrap.scrollIntoView({behavior:'smooth',block:'start'});
+  const system = `당신은 유해피 심리상담센터 아동상담 안내 도우미입니다.
+부모님의 고민을 분석해 적합한 상담 유형, 추천 검사, 추천 치료를 안내해주세요.
+증상이 여러 상담 유형에 겹칠 수 있는 경우 반드시 overlap 항목에 포함하세요.
+반드시 아래 JSON 형식으로만 응답하세요. 다른 텍스트는 절대 포함하지 마세요:
+{
+  "empathy": "공감하는 따뜻한 한 문장",
+  "counsel": ["가장 가능성 높은 상담유형1", "상담유형2"],
+  "tests": ["검사1", "검사2"],
+  "therapies": ["치료1", "치료2"],
+  "overlap": ["증상이 겹칠 수 있는 다른 상담유형들 (없으면 빈 배열)"],
+  "tip": "정확한 진단을 위해 전문 상담사 상담을 권유하는 따뜻한 한 문장",
+  "highlight": ["카드ID1", "카드ID2"]
+}
+상담 유형과 카드ID:
+- 영유아/아동 기본상담: basic-1, basic-2, basic-3
+- ADHD 상담: adhd-1, adhd-2, adhd-3
+- 소아우울증 상담: dep-1, dep-2, dep-3, dep-4
+- 발달장애 상담: dev-1, dev-2
+- 분리불안 상담: anx-1, anx-2
+- 소아강박증 상담: ocd-1, ocd-2
+- 학교부적응 상담: sch-1, sch-2, sch-3
+검사: 유아웩슬러지능검사(WPPSI), 기질성격검사(TCI), 양육태도검사
+치료: 놀이치료, 미술치료, 언어치료, 사회성그룹치료, 학습치료, 인지치료, 행동치료, 가족치료, 연극치료, 양육코칭`;
+  try {
+    const res = await fetch('/api/chat', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-6', max_tokens:600, system,
+        messages:[{role:'user', content:`부모님 고민: "${input}"`}]
+      })
+    });
+    const data = await res.json();
+    const raw = data.content?.[0]?.text || '{}';
+    const json = JSON.parse(raw.replace(/```json|```/g,'').trim());
+    inner.innerHTML = renderResult(json);
+    if (json.highlight) {
+      json.highlight.forEach(id => {
+        const card = document.getElementById('card-'+id);
+        if (card) {
+          card.classList.add('highlighted','open');
+          const q = card.querySelector('.card-q');
+          if (q && !q.querySelector('.ai-badge')) {
+            const badge = document.createElement('span');
+            badge.className = 'ai-badge'; badge.textContent = '필요한 상담';
+            q.appendChild(badge);
+          }
+        }
+      });
+
+      // overlap 카드 — 파랑으로 표시
+      if (json.overlap && json.overlap.length > 0) {
+        // overlap은 상담유형명으로 오므로, 카드 섹션 레이블과 매칭
+        const overlapKeyMap = {
+          'ADHD': ['adhd-1','adhd-2','adhd-3'],
+          '소아우울증': ['dep-1','dep-2','dep-3','dep-4'],
+          '발달장애': ['dev-1','dev-2'],
+          '분리불안': ['anx-1','anx-2'],
+          '소아강박증': ['ocd-1','ocd-2'],
+          '학교부적응': ['sch-1','sch-2','sch-3'],
+          '기본상담': ['basic-1','basic-2','basic-3'],
+        };
+        json.overlap.forEach(name => {
+          Object.keys(overlapKeyMap).forEach(key => {
+            if (name.includes(key)) {
+              overlapKeyMap[key].forEach(id => {
+                const card = document.getElementById('card-'+id);
+                if (card && !card.classList.contains('highlighted')) {
+                  card.classList.add('related');
+                  const q = card.querySelector('.card-q');
+                  if (q && !q.querySelector('.related-badge')) {
+                    const badge = document.createElement('span');
+                    badge.className = 'related-badge'; badge.textContent = '추가관련상담';
+                    q.appendChild(badge);
+                  }
+                }
+              });
+            }
+          });
+        });
+      }
+
+      setTimeout(() => {
+        const first = document.getElementById('card-'+json.highlight[0]);
+        if (first) first.scrollIntoView({behavior:'smooth',block:'center'});
+      }, 500);
+    }
+  } catch(e) {
+    inner.innerHTML = '<div style="padding:20px;color:#888;font-size:13px;">분석 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.</div>';
+  }
+  btn.disabled = false;
+  btn.textContent = '✦ 상담 유형 찾아보기';
+}
+textarea.addEventListener('keydown', e => { if (e.key==='Enter' && e.ctrlKey) analyze(); });
+</script>
+</body>
+</html>
