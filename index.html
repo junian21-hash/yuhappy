@@ -391,69 +391,70 @@ async function analyze() {
         });
       }
 
-      // 추천 카드 미리보기 렌더링
-      const recWrap = document.getElementById('recommendedCards');
-      recWrap.innerHTML = '';
-      recWrap.style.display = 'block';
+      setTimeout(() => {
+        const first = document.getElementById('card-'+(json.highlight[0]));
+        if (first) first.scrollIntoView({behavior:'smooth',block:'center'});
+      }, 300);
+    }
 
-      if (json.highlight && json.highlight.length > 0) {
-        const titleEl = document.createElement('div');
-        titleEl.className = 'rec-section-title';
-        titleEl.textContent = '📌 필요한 상담 카드';
-        recWrap.appendChild(titleEl);
-        json.highlight.forEach(id => {
+    // 추천 카드 미리보기 렌더링 (highlight 블록 밖)
+    const recWrap = document.getElementById('recommendedCards');
+    recWrap.innerHTML = '';
+    recWrap.style.display = 'block';
+    const overlapKeyMap2 = {
+      'ADHD': ['adhd-1','adhd-2','adhd-3'],
+      '소아우울증': ['dep-1','dep-2','dep-3','dep-4'],
+      '발달장애': ['dev-1','dev-2'],
+      '분리불안': ['anx-1','anx-2'],
+      '소아강박증': ['ocd-1','ocd-2'],
+      '학교부적응': ['sch-1','sch-2','sch-3'],
+      '기본상담': ['basic-1','basic-2','basic-3'],
+    };
+    if (json.highlight && json.highlight.length > 0) {
+      const titleEl = document.createElement('div');
+      titleEl.className = 'rec-section-title';
+      titleEl.textContent = '📌 필요한 상담 카드';
+      recWrap.appendChild(titleEl);
+      json.highlight.forEach(id => {
+        const src = document.getElementById('card-'+id);
+        if (src) {
+          const rc = document.createElement('div');
+          rc.className = 'rec-card';
+          rc.innerHTML = '<div class="rec-card-q">' + src.querySelector('.card-q').childNodes[0].textContent.trim() + '<span class="rec-badge">필요한 상담</span></div><div class="tags">' + src.querySelector('.tags').innerHTML + '</div>';
+          rc.onclick = () => { src.scrollIntoView({behavior:'smooth',block:'center'}); src.classList.add('open'); };
+          recWrap.appendChild(rc);
+        }
+      });
+    }
+    if (json.overlap && json.overlap.length > 0) {
+      let relIds = [];
+      json.overlap.forEach(name => {
+        Object.keys(overlapKeyMap2).forEach(key => {
+          if (name.includes(key)) relIds = relIds.concat(overlapKeyMap2[key]);
+        });
+      });
+      relIds = [...new Set(relIds)].filter(id => !(json.highlight||[]).includes(id));
+      if (relIds.length > 0) {
+        const titleEl2 = document.createElement('div');
+        titleEl2.className = 'rec-section-title';
+        titleEl2.style.marginTop = '14px';
+        titleEl2.textContent = '🔵 추가 관련 상담 카드';
+        recWrap.appendChild(titleEl2);
+        relIds.forEach(id => {
           const src = document.getElementById('card-'+id);
           if (src) {
             const rc = document.createElement('div');
-            rc.className = 'rec-card';
-            rc.innerHTML = `<div class="rec-card-q">${src.querySelector('.card-q').childNodes[0].textContent.trim()}<span class="rec-badge">필요한 상담</span></div><div class="tags">${src.querySelector('.tags').innerHTML}</div>`;
+            rc.className = 'rec-card related-card';
+            rc.innerHTML = '<div class="rec-card-q">' + src.querySelector('.card-q').childNodes[0].textContent.trim() + '<span class="rec-badge rel">추가관련상담</span></div><div class="tags">' + src.querySelector('.tags').innerHTML + '</div>';
             rc.onclick = () => { src.scrollIntoView({behavior:'smooth',block:'center'}); src.classList.add('open'); };
             recWrap.appendChild(rc);
           }
         });
       }
-
-      if (json.overlap && json.overlap.length > 0) {
-        const overlapKeyMap = {
-          'ADHD': ['adhd-1','adhd-2','adhd-3'],
-          '소아우울증': ['dep-1','dep-2','dep-3','dep-4'],
-          '발달장애': ['dev-1','dev-2'],
-          '분리불안': ['anx-1','anx-2'],
-          '소아강박증': ['ocd-1','ocd-2'],
-          '학교부적응': ['sch-1','sch-2','sch-3'],
-          '기본상담': ['basic-1','basic-2','basic-3'],
-        };
-        let relIds = [];
-        json.overlap.forEach(name => {
-          Object.keys(overlapKeyMap).forEach(key => {
-            if (name.includes(key)) relIds = relIds.concat(overlapKeyMap[key]);
-          });
-        });
-        relIds = [...new Set(relIds)].filter(id => !(json.highlight||[]).includes(id));
-        if (relIds.length > 0) {
-          const titleEl2 = document.createElement('div');
-          titleEl2.className = 'rec-section-title';
-          titleEl2.style.marginTop = '14px';
-          titleEl2.textContent = '🔵 추가 관련 상담 카드';
-          recWrap.appendChild(titleEl2);
-          relIds.forEach(id => {
-            const src = document.getElementById('card-'+id);
-            if (src) {
-              const rc = document.createElement('div');
-              rc.className = 'rec-card related-card';
-              rc.innerHTML = `<div class="rec-card-q">${src.querySelector('.card-q').childNodes[0].textContent.trim()}<span class="rec-badge rel">추가관련상담</span></div><div class="tags">${src.querySelector('.tags').innerHTML}</div>`;
-              rc.onclick = () => { src.scrollIntoView({behavior:'smooth',block:'center'}); src.classList.add('open'); };
-              recWrap.appendChild(rc);
-            }
-          });
-        }
-      }
-
-      setTimeout(() => {
-        const recWrapEl = document.getElementById('recommendedCards');
-        if (recWrapEl) recWrapEl.scrollIntoView({behavior:'smooth',block:'start'});
-      }, 300);
     }
+    setTimeout(() => {
+      recWrap.scrollIntoView({behavior:'smooth',block:'start'});
+    }, 300);
   } catch(e) {
     inner.innerHTML = '<div style="padding:20px;color:#888;font-size:13px;">분석 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.</div>';
   }
