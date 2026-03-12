@@ -114,6 +114,18 @@
   .cta h3 { color:white; font-size:16px; margin-bottom:8px; font-family:'Noto Serif KR',serif; }
   .cta p { color:rgba(255,255,255,0.6); font-size:13px; margin-bottom:16px; }
   .cta a { display:inline-block; background:var(--orange); color:white; padding:11px 28px; border-radius:30px; font-weight:700; font-size:14px; text-decoration:none; }
+
+  .rec-section-title { font-size:11px; font-weight:700; letter-spacing:2px; color:var(--orange); margin:0 0 10px; display:flex; align-items:center; gap:10px; }
+  .rec-section-title::after { content:''; flex:1; height:1px; background:var(--orange); opacity:0.2; }
+  .rec-card { background:white; border-radius:14px; padding:14px 18px; margin-bottom:8px; border:2px solid var(--orange); cursor:pointer; position:relative; overflow:hidden; box-shadow:0 2px 12px rgba(232,119,34,0.12); }
+  .rec-card.related-card { border-color:#3D6A9E; box-shadow:0 2px 12px rgba(61,106,158,0.12); }
+  .rec-card::before { content:''; position:absolute; left:0; top:0; bottom:0; width:4px; background:var(--orange); border-radius:4px 0 0 4px; }
+  .rec-card.related-card::before { background:#3D6A9E; }
+  .rec-card-q { font-size:13px; font-weight:700; color:var(--brown); margin-bottom:8px; line-height:1.5; }
+  .rec-card-q::before { content:'Q. '; color:var(--orange); }
+  .rec-card.related-card .rec-card-q::before { color:#3D6A9E; }
+  .rec-badge { display:inline-block; color:white; font-size:10px; font-weight:700; padding:2px 8px; border-radius:10px; margin-left:6px; vertical-align:middle; background:var(--orange); }
+  .rec-badge.rel { background:#3D6A9E; }
   .hidden { display:none !important; }
 </style>
 </head>
@@ -148,6 +160,7 @@
     </div>
     <div id="resultInner"></div>
   </div>
+  <div id="recommendedCards" style="display:none;margin-top:16px;"></div>
 </div>
 
 <div class="divider" id="divider">전체 상담 목록</div>
@@ -211,6 +224,7 @@
 
 <script>
 const textarea = document.getElementById('worryInput');
+let lastInput = '';
 const charCount = document.getElementById('charCount');
 textarea.addEventListener('input', () => {
   const len = textarea.value.length;
@@ -232,6 +246,8 @@ function clearHighlights() {
     c.classList.remove('highlighted','related','open');
     c.querySelectorAll('.ai-badge,.related-badge').forEach(b => b.remove());
   });
+  const recWrap = document.getElementById('recommendedCards');
+  if (recWrap) { recWrap.innerHTML=''; recWrap.style.display='none'; }
 }
 function renderResult(json) {
   const makeRtags = (items, cls) => (items||[]).map(i => `<span class="rtag ${cls}">${i}</span>`).join('');
@@ -261,6 +277,10 @@ function renderResult(json) {
 async function analyze() {
   const input = textarea.value.trim();
   if (!input) { alert('고민 내용을 입력해주세요.'); return; }
+  if (input === lastInput) {
+    alert('동일한 내용은 반복 조회할 수 없습니다. 다른 고민을 입력해주세요.');
+    return;
+  }
   const btn = document.getElementById('submitBtn');
   const wrap = document.getElementById('resultWrap');
   const inner = document.getElementById('resultInner');
@@ -271,10 +291,23 @@ async function analyze() {
   divider.classList.add('visible');
   inner.innerHTML = `<div class="loading-wrap"><div class="dots"><span></span><span></span><span></span></div><div class="loading-txt">고민을 분석하고 있어요...</div></div>`;
   wrap.scrollIntoView({behavior:'smooth',block:'start'});
-  const system = `당신은 유해피 심리상담센터 아동상담 안내 도우미입니다.
-부모님의 고민을 분석해 적합한 상담 유형, 추천 검사, 추천 치료를 안내해주세요.
-증상이 여러 상담 유형에 겹칠 수 있는 경우 반드시 overlap 항목에 포함하세요.
-반드시 아래 JSON 형식으로만 응답하세요. 다른 텍스트는 절대 포함하지 마세요:
+  const system = `당신은 유해피 심리상담센터 상담 안내 도우미입니다.
+역할은 오직 하나입니다: 입력된 고민이 심리상담과 관련된 내용인지 판단하고, 맞으면 적합한 상담 유형을 안내하는 것입니다.
+
+[거부 규칙 - 아래 경우만 blocked 필드 반환]
+1. 심리상담과 완전히 무관한 내용 (날씨, 요리, 코딩, 수학 등 일상적 질문)
+2. 개인 신상 질문, 욕설, 무의미한 텍스트
+거부 시: {"blocked": "이 서비스는 심리상담 유형 안내만 제공합니다. 다른 내용은 답변드리기 어렵습니다."}
+
+[유도 규칙 - 치료법/해결책/상담 자체를 요구하는 경우]
+예: "어떻게 해야 하나요?", "치료 방법 알려줘", "해결책이 뭔가요?", "어떻게 고치나요?"
+→ 거부하지 말고, empathy 필드에 아래 형식으로 안내 후 상담 유형 추천:
+"치료 방법은 아이의 상태와 기질에 따라 전문 상담사와의 대화를 통해 결정됩니다. 먼저 어떤 상담이 필요한지 확인해보세요."
+→ 입력 내용에서 심리적 증상을 유추해 가장 가능성 높은 상담 유형을 추천
+
+[허용] 아이 또는 본인의 심리적 증상, 행동 문제, 정서 문제, 치료/해결 요청 모두 포함
+
+허용된 경우 반드시 아래 JSON 형식으로만 응답하세요:
 {
   "empathy": "아이의 현재 심리적 상태를 1문장으로 설명하고, 그 때문에 어떤 상담이 왜 필요한지 1문장으로 설명. 공감 표현 없이 분석적으로 작성. 예시: 구석에 숨는 행동은 외부 환경에 대한 불안과 회피 심리가 나타나는 신호일 수 있어요. 분리불안 상담을 통해 심리적 원인을 파악하는 것이 필요합니다.",
   "counsel": ["가장 가능성 높은 상담유형1", "상담유형2"],
@@ -305,6 +338,12 @@ async function analyze() {
     const data = await res.json();
     const raw = data.content?.[0]?.text || '{}';
     const json = JSON.parse(raw.replace(/```json|```/g,'').trim());
+    if (json.blocked) {
+      inner.innerHTML = '<div style="padding:20px;font-size:14px;color:#888;text-align:center;">⚠️ ' + json.blocked + '</div>';
+      btn.disabled = false; btn.textContent = '✦ 상담 유형 찾아보기';
+      return;
+    }
+    lastInput = input;
     inner.innerHTML = renderResult(json);
     if (json.highlight) {
       json.highlight.forEach(id => {
@@ -352,10 +391,68 @@ async function analyze() {
         });
       }
 
+      // 추천 카드 미리보기 렌더링
+      const recWrap = document.getElementById('recommendedCards');
+      recWrap.innerHTML = '';
+      recWrap.style.display = 'block';
+
+      if (json.highlight && json.highlight.length > 0) {
+        const titleEl = document.createElement('div');
+        titleEl.className = 'rec-section-title';
+        titleEl.textContent = '📌 필요한 상담 카드';
+        recWrap.appendChild(titleEl);
+        json.highlight.forEach(id => {
+          const src = document.getElementById('card-'+id);
+          if (src) {
+            const rc = document.createElement('div');
+            rc.className = 'rec-card';
+            rc.innerHTML = `<div class="rec-card-q">${src.querySelector('.card-q').childNodes[0].textContent.trim()}<span class="rec-badge">필요한 상담</span></div><div class="tags">${src.querySelector('.tags').innerHTML}</div>`;
+            rc.onclick = () => { src.scrollIntoView({behavior:'smooth',block:'center'}); src.classList.add('open'); };
+            recWrap.appendChild(rc);
+          }
+        });
+      }
+
+      if (json.overlap && json.overlap.length > 0) {
+        const overlapKeyMap = {
+          'ADHD': ['adhd-1','adhd-2','adhd-3'],
+          '소아우울증': ['dep-1','dep-2','dep-3','dep-4'],
+          '발달장애': ['dev-1','dev-2'],
+          '분리불안': ['anx-1','anx-2'],
+          '소아강박증': ['ocd-1','ocd-2'],
+          '학교부적응': ['sch-1','sch-2','sch-3'],
+          '기본상담': ['basic-1','basic-2','basic-3'],
+        };
+        let relIds = [];
+        json.overlap.forEach(name => {
+          Object.keys(overlapKeyMap).forEach(key => {
+            if (name.includes(key)) relIds = relIds.concat(overlapKeyMap[key]);
+          });
+        });
+        relIds = [...new Set(relIds)].filter(id => !(json.highlight||[]).includes(id));
+        if (relIds.length > 0) {
+          const titleEl2 = document.createElement('div');
+          titleEl2.className = 'rec-section-title';
+          titleEl2.style.marginTop = '14px';
+          titleEl2.textContent = '🔵 추가 관련 상담 카드';
+          recWrap.appendChild(titleEl2);
+          relIds.forEach(id => {
+            const src = document.getElementById('card-'+id);
+            if (src) {
+              const rc = document.createElement('div');
+              rc.className = 'rec-card related-card';
+              rc.innerHTML = `<div class="rec-card-q">${src.querySelector('.card-q').childNodes[0].textContent.trim()}<span class="rec-badge rel">추가관련상담</span></div><div class="tags">${src.querySelector('.tags').innerHTML}</div>`;
+              rc.onclick = () => { src.scrollIntoView({behavior:'smooth',block:'center'}); src.classList.add('open'); };
+              recWrap.appendChild(rc);
+            }
+          });
+        }
+      }
+
       setTimeout(() => {
-        const first = document.getElementById('card-'+json.highlight[0]);
-        if (first) first.scrollIntoView({behavior:'smooth',block:'center'});
-      }, 500);
+        const recWrapEl = document.getElementById('recommendedCards');
+        if (recWrapEl) recWrapEl.scrollIntoView({behavior:'smooth',block:'start'});
+      }, 300);
     }
   } catch(e) {
     inner.innerHTML = '<div style="padding:20px;color:#888;font-size:13px;">분석 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.</div>';
