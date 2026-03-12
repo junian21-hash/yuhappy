@@ -298,7 +298,7 @@ async function analyze() {
     const res = await fetch('/api/chat', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({
-        model:'claude-sonnet-4-6', max_tokens:600, system,
+        model:'claude-sonnet-4-20250514', max_tokens:600, system,
         messages:[{role:'user', content:`부모님 고민: "${input}"`}]
       })
     });
