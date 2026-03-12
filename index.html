@@ -39,9 +39,12 @@
   .submit-btn:hover { background:#C9611A; }
   .submit-btn:disabled { background:#ccc; cursor:not-allowed; }
 
-  .result-wrap { max-width:600px; margin:24px auto 0; padding:0 20px; display:none; }
+  .result-wrap { max-width:1100px; margin:24px auto 0; padding:0 20px; display:none; }
   .result-wrap.visible { display:block; }
-  .result-box { background:white; border-radius:20px; border:2px solid var(--orange); overflow:hidden; box-shadow:0 4px 20px rgba(232,119,34,0.12); animation:fadeIn 0.3s ease; }
+  .result-inner-flex { display:flex; gap:16px; align-items:flex-start; }
+  .result-box { background:white; border-radius:20px; border:2px solid var(--orange); overflow:hidden; box-shadow:0 4px 20px rgba(232,119,34,0.12); animation:fadeIn 0.3s ease; flex:1; min-width:0; }
+  .result-cards-col { width:320px; flex-shrink:0; }
+  @media(max-width:700px) { .result-inner-flex { flex-direction:column; } .result-cards-col { width:100%; } }
   @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
   .result-header { background:var(--orange); padding:14px 20px; display:flex; align-items:center; gap:10px; }
   .result-header h3 { color:white; font-size:14px; font-weight:700; }
@@ -153,14 +156,16 @@
 </div>
 
 <div class="result-wrap" id="resultWrap">
-  <div class="result-box">
-    <div class="result-header">
-      <div style="width:28px;height:28px;background:rgba(255,255,255,0.2);border-radius:50%;display:flex;align-items:center;justify-content:center;">✦</div>
-      <h3>상담 추천 결과</h3>
+  <div class="result-inner-flex">
+    <div class="result-box">
+      <div class="result-header">
+        <div style="width:28px;height:28px;background:rgba(255,255,255,0.2);border-radius:50%;display:flex;align-items:center;justify-content:center;">✦</div>
+        <h3>상담 추천 결과</h3>
+      </div>
+      <div id="resultInner"></div>
     </div>
-    <div id="resultInner"></div>
+    <div class="result-cards-col" id="recommendedCards" style="display:none;"></div>
   </div>
-  <div id="recommendedCards" style="display:none;margin-top:16px;"></div>
 </div>
 
 <div class="divider" id="divider">전체 상담 목록</div>
@@ -453,7 +458,7 @@ async function analyze() {
       }
     }
     setTimeout(() => {
-      recWrap.scrollIntoView({behavior:'smooth',block:'start'});
+      document.getElementById('resultWrap').scrollIntoView({behavior:'smooth',block:'start'});
     }, 300);
   } catch(e) {
     inner.innerHTML = '<div style="padding:20px;color:#888;font-size:13px;">분석 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.</div>';
